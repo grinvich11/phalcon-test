@@ -1,0 +1,113 @@
+<?php
+/**
+ * @var \Phalcon\Mvc\View\Engine\Php $this
+ */
+?>
+
+<?php use Phalcon\Tag; ?>
+
+<div class="page-header">
+    <h1>Сообщения</h1>
+</div>
+
+<div class="well well-sm">
+	<?php
+		echo $this->tag->form(
+			array(
+				"messages/search",
+				"autocomplete" => "off",
+				"class" => "form-vertical",
+				"id" => "form-search"
+			)
+		);
+	?>
+
+	<div class="col-sm-12">
+		<div class="form-group col-sm-3">
+			<label for="fieldName" class="col-sm-2 control-label">Name</label>
+			<div class="col-sm-10">
+				<?php echo $this->tag->textField(array("name", "size" => 30, "class" => "form-control", "id" => "fieldName")) ?>
+			</div>
+		</div>
+
+		<div class="form-group col-sm-3">
+			<label for="fieldPhone" class="col-sm-2 control-label">Phone</label>
+			<div class="col-sm-10">
+				<?php echo $this->tag->textField(array("phone", "size" => 30, "class" => "form-control", "id" => "fieldPhone")) ?>
+			</div>
+		</div>
+
+		<div class="form-group col-sm-3">
+			<label for="fieldEmail" class="col-sm-2 control-label">Email</label>
+			<div class="col-sm-10">
+				<?php echo $this->tag->textField(array("email", "size" => 30, "class" => "form-control", "id" => "fieldEmail")) ?>
+			</div>
+		</div>
+
+		<div class="form-group col-sm-3">
+			<?php echo $this->tag->linkTo(array("messages/index", "Reset", "class" => "btn btn-default", "type"=>"reset")) ?>
+			<?php echo $this->tag->submitButton(array("Search", "class" => "btn btn-primary")) ?>
+		</div>
+	</div>
+
+	<?php echo $this->tag->endForm(); ?>
+
+	<div class="clearfix"></div>
+</div>
+
+<div id="flash-messages">
+	<?php echo $this->getContent(); ?>
+</div>
+
+<div class="row">
+    <table class="table table-bordered" id="gridview">
+        <thead>
+            <tr>
+                <th>Id</th>
+				<th>Name</th>
+				<th>Phone</th>
+				<th>Email</th>
+				<th>Message</th>
+				<th>Created</th>
+
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($page->items as $message): ?>
+            <tr>
+                <td><?php echo $message->id ?></td>
+            <td><?php echo $message->name ?></td>
+            <td><?php echo $message->phone ?></td>
+            <td><?php echo $message->email ?></td>
+            <td><?php echo $message->message ?></td>
+            <td><?php echo $message->created ?></td>
+
+                <td><?php echo $this->tag->linkTo(array("messages/edit/" . $message->id, "Edit", "class"=>"edit-msg")); ?></td>
+                <td><?php echo $this->tag->linkTo(array("messages/delete/" . $message->id, "Delete", "class"=>"del-btn")); ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+
+<div class="row">
+    <div class="col-sm-1">
+        <p class="pagination" style="line-height: 1.42857;padding: 6px 12px;">
+            <?php echo $page->current, "/", $page->total_pages ?>
+        </p>
+    </div>
+	<?php if($page->current!==$page->total_pages): ?>
+    <div class="col-sm-11">
+        <nav>
+            <ul class="pagination">
+                <li><?php echo $this->tag->linkTo("messages/search", "First") ?></li>
+                <li><?php echo $this->tag->linkTo("messages/search?page=" . $page->before, "Previous") ?></li>
+                <li><?php echo $this->tag->linkTo("messages/search?page=" . $page->next, "Next") ?></li>
+                <li><?php echo $this->tag->linkTo("messages/search?page=" . $page->last, "Last") ?></li>
+            </ul>
+        </nav>
+    </div>
+	<?php endif; ?>
+</div>
