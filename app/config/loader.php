@@ -4,7 +4,8 @@ $loader = new \Phalcon\Loader();
 
 
 $loader->registerNamespaces([
-	'app\Forms'       => $config->application->formsDir,
+	'App\Forms'       => $config->application->formsDir,
+	'App\Library'       => $config->application->libraryDir,
 ]);
 
 /**

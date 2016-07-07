@@ -1,9 +1,8 @@
 <?php
 
 use Phalcon\Mvc\View;
-use Phalcon\Mvc\Model\Criteria;
-use Phalcon\Paginator\Adapter\Model as Paginator;
-use app\Forms\MessageForm;
+use App\Forms\MessageForm;
+use App\Library\MessagesGrid;
 
 
 class MessagesController extends ControllerBase
@@ -13,41 +12,20 @@ class MessagesController extends ControllerBase
      */
     public function indexAction()
     {
-        $numberPage = 1;
-        if ($this->request->isPost()) {
-            $query = Criteria::fromInput($this->di, 'Messages', $_POST);
-            $this->persistent->parameters = $query->getParams();
-        } else {
-			$this->persistent->parameters = null;
+		$grid=new MessagesGrid('Messages');
 
-            $numberPage = $this->request->getQuery("page", "int");
-        }
-
-        $parameters = $this->persistent->parameters;
-        if (!is_array($parameters)) {
-            $parameters = array();
-        }
-        $parameters["order"] = "created DESC";
-
-        $messages = Messages::find($parameters);
+        $messages = Messages::find($grid->getParameters());
         if (count($messages) == 0) {
             $this->flash->notice("The search did not find any messages");
-
-            $this->dispatcher->forward(array(
-                "controller" => "messages",
-                "action" => "index"
-            ));
 
             return;
         }
 
-        $paginator = new Paginator(array(
-            'data' => $messages,
-            'limit'=> 10,
-            'page' => $numberPage
-        ));
+		$grid->messages=$messages;
+		$grid->setLimit(3);
 
-        $this->view->page = $paginator->getPaginate();
+        $this->view->grid = $grid;
+		$this->view->page = $grid->getPaginator();
     }
 
     /**
@@ -74,7 +52,7 @@ class MessagesController extends ControllerBase
 
                 $this->dispatcher->forward(array(
                     'controller' => "messages",
-                    'action' => 'index'
+                    'action' => 'messages'
                 ));
 
                 return;
@@ -82,18 +60,10 @@ class MessagesController extends ControllerBase
 
             $this->view->id = $message->id;
 
-            $this->tag->setDefault("id", $message->id);
-            $this->tag->setDefault("name", $message->name);
-            $this->tag->setDefault("phone", $message->phone);
-            $this->tag->setDefault("email", $message->email);
-            $this->tag->setDefault("message", $message->message);
-            $this->tag->setDefault("created", $message->created);
-
 			$this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
-			$this->view->form = new MessageForm(new Messages(), array(
+			$this->view->form = new MessageForm($message, array(
 				'edit' => true
 			));
-
         }
     }
 
@@ -102,6 +72,7 @@ class MessagesController extends ControllerBase
      */
     public function createAction()
     {
+		$error=false;
         if (!$this->request->isPost()) {
             $this->dispatcher->forward(array(
                 'controller' => "messages",
@@ -111,28 +82,44 @@ class MessagesController extends ControllerBase
             return;
         }
 
-        $message = new Messages();
-        $message->name = $this->request->getPost("name");
-        $message->phone = $this->request->getPost("phone");
-        $message->email = $this->request->getPost("email", "email");
-        $message->message = $this->request->getPost("message");
-        $message->created = $this->request->getPost("created");
+		$form = new MessageForm();
 
+		$this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
+		$this->view->form = $form;
 
-        if (!$message->save()) {
-            foreach ($message->getMessages() as $message) {
-                $this->flash->error($message);
-            }
+		if (!$form->isValid($_POST)) {
+			$error=true;
 
-            $this->dispatcher->forward(array(
-                'controller' => "messages",
-                'action' => 'new'
+			foreach ($form->getMessages() as $msg) {
+				$this->flash->error($msg);
+			}
+		}else{
+			$message = new Messages();
+
+			$message->assign(array(
+                'name' => $this->request->getPost('name'),
+                'phone' => $this->request->getPost('phone'),
+                'email' => $this->request->getPost('email'),
+				'message' => $this->request->getPost('message'),
             ));
 
-            return;
-        }
+			if (!$message->save()) {
+				$error=true;
 
-        //$this->flash->success("message was created successfully");
+				foreach ($message->getMessages() as $message) {
+					$this->flash->error($message);
+				}
+			}
+		}
+
+		if($error){
+			$this->dispatcher->forward(array(
+				'controller' => "messages",
+				'action' => 'new'
+			));
+
+			return;
+		}
 
 		//message was created successfully
         return 'true';
@@ -144,7 +131,7 @@ class MessagesController extends ControllerBase
      */
     public function saveAction()
     {
-
+		$error=false;
         if (!$this->request->isPost()) {
             $this->dispatcher->forward(array(
                 'controller' => "messages",
@@ -162,37 +149,51 @@ class MessagesController extends ControllerBase
 
             $this->dispatcher->forward(array(
                 'controller' => "messages",
-                'action' => 'index'
+                'action' => 'messages'
             ));
 
             return;
         }
 
-        $message->name = $this->request->getPost("name");
-        $message->phone = $this->request->getPost("phone");
-        $message->email = $this->request->getPost("email", "email");
-        $message->message = $this->request->getPost("message");
-		$this->view->id = $message->id;
+		$form = new MessageForm($message, array(
+			'edit' => true
+		));
 
-        if (!$message->save()) {
-			$this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
-			$this->view->form = new MessageForm(new Messages(), array(
-				'edit' => true
+		$this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
+		$this->view->form = $form;
+
+		if (!$form->isValid($_POST)) {
+			$error=true;
+			foreach ($form->getMessages() as $msg) {
+				$this->flash->error($msg);
+			}
+		}else{
+			$message->assign(array(
+                'name' => $this->request->getPost('name'),
+                'phone' => $this->request->getPost('phone'),
+                'email' => $this->request->getPost('email'),
+				'message' => $this->request->getPost('message'),
+            ));
+
+			if (!$message->save()) {
+				$error=true;
+				$this->view->id = $message->id;
+
+				foreach ($message->getMessages() as $msg) {
+					$this->flash->error($msg);
+				}
+			}
+        }
+
+		if($error){
+			$this->dispatcher->forward(array(
+				'controller' => "messages",
+				'action' => 'edit',
+				'params' => array($message->id)
 			));
 
-
-            foreach ($message->getMessages() as $msg) {
-                $this->flash->error($msg);
-            }
-
-            $this->dispatcher->forward(array(
-                'controller' => "messages",
-                'action' => 'edit',
-                'params' => array($message->id)
-            ));
-
-            return;
-        }
+			return;
+		}
 
         return 'true';
     }
@@ -212,21 +213,20 @@ class MessagesController extends ControllerBase
 
             $this->dispatcher->forward(array(
                 'controller' => "messages",
-                'action' => 'index'
+                'action' => 'messages'
             ));
 
             return;
         }
 
         if (!$message->delete()) {
-
             foreach ($message->getMessages() as $message) {
                 $this->flash->error($message);
             }
 
             $this->dispatcher->forward(array(
                 'controller' => "messages",
-                'action' => 'index'
+                'action' => 'messages'
             ));
 
             return;
@@ -235,4 +235,7 @@ class MessagesController extends ControllerBase
         return 'true';
     }
 
+	public function messagesAction(){
+		$this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
+	}
 }

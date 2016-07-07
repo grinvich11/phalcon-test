@@ -12,9 +12,10 @@ jQuery(function($) {
 					$('#gridview').attr('opacity', '1');
 
 					if(data=='true'){
-						$('#gridview').load('/messages/search #gridview > *');
+						$('#gridview').load('/messages/index #gridview > *');
 					}else{
-						$('#flash-messages').html($(data).find('#flash-messages').html());
+						$('#messageModal').modal('show');
+						$('#messageModal .modal-content').html(data);
 					}
 				},
 			});
@@ -38,7 +39,7 @@ jQuery(function($) {
 
 				if(data=='true'){
 					$('#messageModal').modal('hide');
-					$('#gridview').load('/messages/search #gridview > *');
+					$('#gridview').load('/messages/index #gridview > *');
 				}else{
 				$('#message-form').html($(data).html());
 			}

@@ -1,13 +1,6 @@
 <?php
 
-use Phalcon\Mvc\Model\Validator\Email as Email;
 use Phalcon\Mvc\Model\Behavior\Timestampable;
-use Phalcon\Validation;
-use Phalcon\Validation\Validator\Email as EmailValidator;
-use Phalcon\Validation\Validator\PresenceOf;
-use Phalcon\Validation\Validator\StringLength;
-use Phanbook\Validators\Phone;
-use Phalcon\Validation\Validator\Regex;
 
 class Messages extends \Phalcon\Mvc\Model
 {
@@ -54,104 +47,6 @@ class Messages extends \Phalcon\Mvc\Model
                 )
             )
         );
-    }
-
-    /**
-     * Validations and business logic
-     *
-     * @return boolean
-     */
-    public function validation()
-    {
-        $validator = new Validation();
-
-
-		/*$validator->add(
-			'name',
-			new PresenceOf(
-				array(
-					'message' => 'The name is required'
-				)
-			)
-		);*/
-
-		$validator->add(
-			'name',
-			new StringLength(
-				array(
-					'messageMinimum' => 'Имя должно содержать минимум 3 символа',
-					'min' => 3,
-				)
-			)
-		);
-
-		$validator->add(
-			'email',
-			new PresenceOf(
-				array(
-					'message' => 'Необходим Email'
-				)
-			)
-		);
-
-		/*$validator->add(
-			'phone',
-			new PresenceOf(
-				array(
-					'message' => 'Необходимо указать телефон'
-				)
-			)
-		);*/
-
-		/*$validator->add(
-			'phone',
-			new Phone(
-				array(
-					'message' => 'Неправильный формат телефона'
-				)
-			)
-		);*/
-
-		$validator->add('phone',
-			new Regex(
-				array(
-					'message'    => 'Неправильный формат телефона',
-					'pattern'    => '/\+380[0-9]{9}+/',
-					'allowEmpty' => true
-				)
-			)
-		);
-
-        $validator->add(
-            'email',
-            new EmailValidator(
-					array(
-						'message' => 'Email указан не верно'
-					)
-			)
-        );
-
-		$validator->add(
-			'message',
-			new PresenceOf(
-				array(
-					'message' => 'Сообщение должно быть заполнено'
-				)
-			)
-		);
-
-
-		$validator->add(
-			'message',
-			new StringLength(
-				array(
-					'messageMaximum' => 'Сообщение должно быть не больше 200 символов',
-					'max' => 200,
-				)
-			)
-		);
-
-        return $this->validate($validator);
     }
 
     /**

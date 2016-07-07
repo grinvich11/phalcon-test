@@ -31,7 +31,7 @@
 		<div class="form-group">
 			<label for="fieldPhone" class="col-sm-2 control-label">Phone</label>
 			<div class="col-sm-10">
-				<?php echo $form->render("phone", array("size" => 30, "class" => "form-control", "id" => "fieldPhone", "placeholder"=>"+380XXXXXXXXX")); ?>
+				<?php echo $form->render("phone", array("size" => 30, "class" => "form-control", "id" => "fieldPhone", "placeholder"=>"+380XXXXXXXXX", 'maxLength'=>13)); ?>
 			</div>
 		</div>
 
